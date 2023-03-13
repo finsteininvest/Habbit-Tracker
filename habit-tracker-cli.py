@@ -22,6 +22,7 @@ dayname = ["M",
            "S"]
 
 db = TinyDB('tracker.json')
+term = Terminal()
 
 
 def horizontal(text):
@@ -34,23 +35,48 @@ def horizontal(text):
 
 def print_calendar(jahr, monat):
     """Output the calendar with trackers to terminal."""
+    actquery = Query()
+    table = db.table('activities')
+    table_done = db.table('track')
+    all_activities = table.all()
     cal = calendar.Calendar()
-    dates = cal.monthdays2calendar(jahr, monat)
+    dates = cal.monthdays2calendar(int(jahr), int(monat))
     for week in dates:
         weekline = ''
         dateline = ''
+        dateline_orig = ''
         for date, weekday in week:
             if date == 0:
                 date = ''
             weekline += dayname[weekday] + ' '
-            dateline += str(date) + ' '
+            dateline_orig += str(date) + ' '
         print(' ' * 20, weekline)
-        dateline = horizontal(dateline)
+        dateline = horizontal(dateline_orig)
         datelines = dateline.split('\n')
         print(' ' * 20, datelines[0])
         print(' ' * 20, datelines[1])
-        print('\n')
+        dateline_list = dateline_orig.split()
+        for activity in all_activities:
+            done_activities = table_done.search(actquery.activity == activity['activity'])
+            #print(len(done_activities))
+            out_string = activity['activity'] + ' (' + activity['frequency'] + ')' + ' ' * 15
+            for done_activity in done_activities:
+                try:
+                    check_jahr, check_monat, datum_tag = done_activity['date'].split('-')
+                    #print(datum_tag)
+                    if check_jahr == jahr and check_monat == monat:
+                        offset = dateline_list.index(datum_tag)
+                        if offset > 0:
+                            offset_col = 22 + offset * 2
+                            #print(offset_col)
+                            out_string = out_string[:offset_col-1]+'X'+out_string[offset_col:]                   
+                except ValueError:
+                    #print('ValueError')
+                    pass
+        print(out_string)
 
+        print('\n')
+        # out_string = out_string[:offset_col]+'X'+out_string[offset_col+1:]
 
 def add_done(what):
     """Mark an activity as done for a specific date."""
@@ -94,7 +120,6 @@ def main(jahr, monat, kommando, what):
 
 
 if __name__ == '__main__':
-    term = Terminal()
     print(term.home + term.clear)
     parser = argparse.ArgumentParser(
         prog='habit-tracker-cli',
