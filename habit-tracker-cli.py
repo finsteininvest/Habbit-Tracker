@@ -57,26 +57,32 @@ def print_calendar(jahr, monat):
         print(' ' * 20, datelines[1])
         dateline_list = dateline_orig.split()
         for activity in all_activities:
-            done_activities = table_done.search(actquery.activity == activity['activity'])
-            #print(len(done_activities))
-            out_string = activity['activity'] + ' (' + activity['frequency'] + ')' + ' ' * 15
+            done_activities = table_done.search(actquery.activity ==
+                                                activity['activity'])
+            # print(len(done_activities))
+            out_string = activity['activity'] + \
+                ' (' + activity['frequency'] + ')' + ' ' * 15
             for done_activity in done_activities:
                 try:
-                    check_jahr, check_monat, datum_tag = done_activity['date'].split('-')
-                    #print(datum_tag)
+                    check_jahr, check_monat, datum_tag = \
+                        done_activity['date'].split('-')
+                    # print(datum_tag)
                     if check_jahr == jahr and check_monat == monat:
                         offset = dateline_list.index(datum_tag)
-                        if offset > 0:
+                        # print(offset)
+                        if offset >= 0:
                             offset_col = 22 + offset * 2
-                            #print(offset_col)
-                            out_string = out_string[:offset_col-1]+'X'+out_string[offset_col:]                   
+                            # print(offset_col)
+                            out_string = out_string[:offset_col - 1] + \
+                                'X' + out_string[offset_col:]
                 except ValueError:
-                    #print('ValueError')
+                    # print('ValueError')
                     pass
-        print(out_string)
+            print(out_string)
 
         print('\n')
         # out_string = out_string[:offset_col]+'X'+out_string[offset_col+1:]
+
 
 def add_done(what):
     """Mark an activity as done for a specific date."""
