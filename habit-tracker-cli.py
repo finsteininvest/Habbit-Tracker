@@ -1,0 +1,111 @@
+"""habit-tracker-cli.
+
+Programm to track habits.
+Habits can be weekly or daily
+
+"""
+
+from tinydb import TinyDB, Query
+from blessed import Terminal
+import argparse
+from itertools import zip_longest
+import calendar
+# import datetime
+from dateutil.parser import parse
+
+dayname = ["M",
+           "T",
+           "W",
+           "T",
+           "F",
+           "S",
+           "S"]
+
+db = TinyDB('tracker.json')
+
+
+def horizontal(text):
+    """Convert horizontal to vertical text."""
+    lines = ''
+    for x in zip_longest(*text.split(' '), fillvalue=' '):
+        lines += ' '.join(x) + '\n'
+    return lines
+
+
+def print_calendar(jahr, monat):
+    """Output the calendar with trackers to terminal."""
+    cal = calendar.Calendar()
+    dates = cal.monthdays2calendar(jahr, monat)
+    for week in dates:
+        weekline = ''
+        dateline = ''
+        for date, weekday in week:
+            if date == 0:
+                date = ''
+            weekline += dayname[weekday] + ' '
+            dateline += str(date) + ' '
+        print(' ' * 20, weekline)
+        dateline = horizontal(dateline)
+        datelines = dateline.split('\n')
+        print(' ' * 20, datelines[0])
+        print(' ' * 20, datelines[1])
+        print('\n')
+
+
+def add_done(what):
+    """Mark an activity as done for a specific date."""
+    if len(what) == 0:
+        print("Error: Do not know what to update!")
+        quit()
+    if len(what.split(',')) != 2:
+        print("Error: Date missing.")
+        quit()
+    activity, datum = what.split(',')
+    dt = parse(datum)
+    datum = dt.strftime('%Y-%m-%d')
+    table = db.table('track')
+    table.insert({'activity': activity, 'date': datum})
+
+
+def add(what):
+    """Add something to be tracked."""
+    if len(what) == 0:
+        print("Error: Do not know what to add!")
+        quit()
+    if len(what.split(',')) != 2:
+        print("Error: Frequency missing.")
+        quit()
+    activity, frequency = what.split(',')
+    item = Query()
+    table = db.table('activities')
+    table.upsert({'activity': activity,
+                  'frequency': frequency,
+                  'status': 'active'},
+                 item.activity == activity)
+
+
+def main(jahr, monat, kommando, what):
+    """Handle commands to tracker."""
+    if kommando == 'add':
+        add(what)
+    if kommando == 'done':
+        add_done(what)
+    print_calendar(jahr, monat)
+
+
+if __name__ == '__main__':
+    term = Terminal()
+    print(term.home + term.clear)
+    parser = argparse.ArgumentParser(
+        prog='habit-tracker-cli',
+        description='Tracking habits from the command line.')
+    parser.add_argument('-y', '--year', required=True)
+    parser.add_argument('-m', '--month', required=True)
+    parser.add_argument('-c', '--command', required=False, default='')
+    parser.add_argument('-w', '--what', required=False, default='')
+    args = parser.parse_args()
+    monthName = calendar.month_name[int(args.month)]
+    jahr = args.year
+    outStr = monthName + ' ' + jahr
+    print('Habbit Tracker\n' + outStr)
+    main(jahr, args.month, args.command, args.what)
