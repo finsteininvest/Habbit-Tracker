@@ -130,10 +130,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog='habit-tracker-cli',
         description='Tracking habits from the command line.')
-    parser.add_argument('-y', '--year', required=True)
-    parser.add_argument('-m', '--month', required=True)
-    parser.add_argument('-c', '--command', required=False, default='')
-    parser.add_argument('-w', '--what', required=False, default='')
+    parser.add_argument('-y', '--year', required=True, help='Year to look at.')
+    parser.add_argument('-m', '--month', required=True,
+                        help='Month to look at.')
+    parser.add_argument('-c', '--command', required=False,
+                        help='Command: add|done',
+                        default='')
+    parser.add_argument('-w', '--what', required=False,
+                        help='What: Activity, Frequency for "add" \
+                        or Activity,Date for "done"',
+                        default='')
     args = parser.parse_args()
     monthName = calendar.month_name[int(args.month)]
     jahr = args.year
